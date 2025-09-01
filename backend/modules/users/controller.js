@@ -1,10 +1,10 @@
 import User from "./model.js";
+import Friends from '../friends/model.js';
 
 export async function getMyProfile(req, res) {
     try {
         const user = await User.findById(req.user.id)
-            .select('-password')
-            .populate('friends', 'name username profilePicture');
+            .select('-password');
         if (!user)
             return res.status(404).json({ message: "User not found" });
         res.json(user);
@@ -17,15 +17,15 @@ export async function getMyProfile(req, res) {
 export async function updateProfile(req, res) {
     try {
         const { name, bio, profilePicture } = req.body;
+        console.log(name, bio, profilePicture);
         
-        const updated = {};
-        if (name) updated.name = name;
-        if (bio) updated.bio = bio;
-        if (profilePicture) updated.profilePicture = profilePicture;
+        const update = {};
+        if (name) update.name = name;
+        if (bio) update.bio = bio;
+        if (profilePicture) update.profilePicture = profilePicture;
 
-        const user = await User.findByIdAndUpdate(req.user.id, updated, { new: true })
-            .select('-password')
-            .populate('friends', 'name username profilePicture');
+        const user = await User.findByIdAndUpdate(req.user.id, update, { new: true })
+            .select('-password');
         if (!user)
             return res.status(404).json({ message: "User not found" });
         res.json(user);
@@ -36,7 +36,7 @@ export async function updateProfile(req, res) {
 }
 
 export async function searchUsers(req, res) {
-    console.log("Searching for:", req.query);
+    // console.log("Searching for:", req.query);
     try {
         
         const q = req.query.q || '';
@@ -52,7 +52,33 @@ export async function searchUsers(req, res) {
             ]
         }).limit(20).select('name username profilePicture');
 
-        res.json(users);
+        // get friend status
+        const myFriends = await Friends.find({
+            $or: [
+                { from: req.user.id },
+                { to: req.user.id }
+            ]
+        })
+
+        const statuses = {
+            "": "Send Request",
+            "pending": "Pending",
+            "accepted": "Friend"
+        }
+
+        const friendsStatus = {};
+        myFriends.forEach(fr => {
+            const friendId = fr.from.equals(req.user.id) ? fr.to : fr.from;
+            friendsStatus[friendId] = statuses[fr.status];
+        });
+
+        const updatedUsers = users.map(user => ({
+            ...user.toObject(),
+            status: friendsStatus[user._id] || ''
+        }));
+
+        console.log(updatedUsers)
+        res.json(updatedUsers);
     }
     catch (err) {
         res.status(500).json({ message: err.message });
@@ -62,7 +88,7 @@ export async function searchUsers(req, res) {
 export async function getUserByUsername(req, res) {
     try {
         const user = await User.findOne({ username: req.params.username })
-            .select('name username profilePicture bio');
+            .select('-password');
 
         if (!user)
             return res.status(404).json({ message: "User not found" });

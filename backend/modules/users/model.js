@@ -20,7 +20,6 @@ const userSchema = new mongoose.Schema({
         unique: true,
         lowercase: true,
         match: [/^\S+@\S+\.\S+$/, "Please enter a valid email address"],
-        index: true,
     },
     password: {
         type: String,
@@ -36,9 +35,8 @@ const userSchema = new mongoose.Schema({
         maxlength: [500, "Bio must be at most 500 characters"],
         default: "",
     },
-    friends: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
-    requests: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
+    friends: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }]
 }, { timestamps: true });
 
-userSchema.index({ name: 1, username: 1 });
+userSchema.index({ name: 'text', username: 'text' });
 export default mongoose.model("User", userSchema);

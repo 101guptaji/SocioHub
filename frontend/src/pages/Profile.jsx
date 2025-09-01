@@ -1,10 +1,18 @@
-import {useEffect} from 'react'
+import { useEffect} from 'react'
+import { useNavigate } from 'react-router-dom'
 import {useDispatch, useSelector} from 'react-redux'
 import {fetchProfile} from '../redux/slices/authSlice'
+import ProfileCard from '../components/ProfileCard'
+import '../styles/profileStyle.css'
 
 const Profile = () => {
   const dispatch = useDispatch()
   const {user, loading, error} = useSelector((state) => state.auth)
+  const navigate = useNavigate()
+
+  const handleEditProfile = () => {
+    navigate('/edit-profile')
+  }
 
   useEffect(() => {
     const fetchData = async () => {
@@ -18,10 +26,7 @@ const Profile = () => {
 
   return (
     <div className="container">
-      <h2>@{user?.username}</h2>
-      <p>Name: {user?.name}</p>
-      <p>Bio: {user?.bio}</p>
-      <img src={user?.profilePicture || '/profile.png'} alt="avatar" style={{ width:120, height:120, borderRadius:8 }} />
+      <ProfileCard user={user} onEditProfile={handleEditProfile} />
     </div>
   )
 }

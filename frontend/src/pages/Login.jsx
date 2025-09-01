@@ -25,7 +25,7 @@ const Login = () => {
     try {
       await dispatch(loginUser({ ...formData })).unwrap();
       toast.success('Login successful!', { id: toastId });
-      navigate('/feed');
+      navigate('/profile');
     } catch (error) {
       toast.error(error?.message || 'Login failed', { id: toastId });
     }
