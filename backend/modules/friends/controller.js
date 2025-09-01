@@ -1,7 +1,7 @@
 import FriendRequest from './model.js';
 import User from '../users/model.js';
 
-export async function sendRequest(req, res) {
+export async function sendRequest(req, res, next) {
     try {
         const from = req.user.id;
         const { toUserId } = req.body;
@@ -20,7 +20,7 @@ export async function sendRequest(req, res) {
     }
 }
 
-export async function listRequests(req, res) {
+export async function listRequests(req, res, next) {
     try {
         const incoming = await FriendRequest.find({ to: req.user.id, status: 'pending' }).populate('from', 'username name profilePicture');
         const outgoing = await FriendRequest.find({ from: req.user.id, status: 'pending' }).populate('to', 'username name profilePicture');
@@ -30,7 +30,7 @@ export async function listRequests(req, res) {
     }
 }
 
-export async function acceptRequest(req, res) {
+export async function acceptRequest(req, res, next) {
     try {
         const id = req.params.id;
         const fr = await FriendRequest.findById(id);
@@ -50,15 +50,13 @@ export async function acceptRequest(req, res) {
     }
 }
 
-export async function rejectRequest(req, res) {
+export async function rejectRequest(req, res, next) {
     try {
-        const id = req.params.id;
-        const fr = await FriendRequest.findById(id);
-        if (!fr || fr.to.toString() !== req.user.id) 
+        const fromUserId = req.user.id;
+        const toUserId = req.params.id;
+        const fr = await FriendRequest.findOneAndDelete({ from: fromUserId, to: toUserId, status: 'pending' });
+        if (!fr) 
             return res.status(404).json({ message: 'Request not found' });
-
-        fr.status = 'rejected';
-        await fr.save();
 
         res.status(200).json({ message: 'Rejected' });
     } catch (err) {
@@ -66,7 +64,7 @@ export async function rejectRequest(req, res) {
     }
 }
 
-export async function unfriend(req, res) {
+export async function unfriend(req, res, next) {
     try {
         const other = req.params.userId;
         await FriendRequest.deleteMany({

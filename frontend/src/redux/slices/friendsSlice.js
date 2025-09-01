@@ -2,9 +2,9 @@ import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import API from '../../api/axios';
 
 export const sendFriendRequest = createAsyncThunk('friend/sendFriendRequest', 
-    async (userId, {rejectWithValue}) => {
+    async (toUserId, {rejectWithValue}) => {
     try {
-        const response = await API.post(`/friends/requests`, { toUserId: userId });
+        const response = await API.post(`/friends/requests`, { toUserId });
         return response.data;
     } catch (error) {
         return rejectWithValue(error.response.data);
@@ -15,6 +15,7 @@ export const listRequests = createAsyncThunk('friend/listRequests',
     async (_, {rejectWithValue}) => {
     try {
         const response = await API.get(`/friends/requests`);
+        // console.log("Requests", response.data);
         return response.data;
     } catch (error) {
         return rejectWithValue(error.response.data);
@@ -32,9 +33,9 @@ export const acceptFriendRequest = createAsyncThunk('friend/acceptFriendRequest'
 });
 
 export const rejectFriendRequest = createAsyncThunk('friend/rejectFriendRequest', 
-    async (requestId, {rejectWithValue}) => {
+    async (toUserId, {rejectWithValue}) => {
     try {
-        const response = await API.post(`/friends/requests/${requestId}/reject`);
+        const response = await API.post(`/friends/requests/${toUserId}/reject`);
         return response.data;
     } catch (error) {
         return rejectWithValue(error.response.data);
@@ -55,6 +56,8 @@ const friendsSlice = createSlice({
     name: 'friends',
     initialState: {
         friends: [],
+        incomingRequests: [],
+        outgoingRequests: [],
         loading: false,
         error: null
     },
@@ -77,7 +80,8 @@ const friendsSlice = createSlice({
             })
             .addCase(listRequests.fulfilled, (state, action) => {
                 state.loading = false;
-                state.friends = action.payload;
+                state.incomingRequests = action.payload?.incoming || [];
+                state.outgoingRequests = action.payload?.outgoing || [];
             })
             .addCase(listRequests.rejected, (state, action) => {
                 state.loading = false;

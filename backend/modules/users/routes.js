@@ -5,6 +5,7 @@ import {auth} from '../../middleware/auth.js'
 const router = Router();
 
 router.get('/search', auth, userController.searchUsers);
+router.get('/friends', auth, userController.getFriends);
 router.get('/me', auth, userController.getMyProfile);
 router.put('/me', auth, userController.updateProfile);
 

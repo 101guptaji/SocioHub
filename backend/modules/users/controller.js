@@ -60,16 +60,10 @@ export async function searchUsers(req, res) {
             ]
         })
 
-        const statuses = {
-            "": "Send Request",
-            "pending": "Pending",
-            "accepted": "Friend"
-        }
-
         const friendsStatus = {};
         myFriends.forEach(fr => {
             const friendId = fr.from.equals(req.user.id) ? fr.to : fr.from;
-            friendsStatus[friendId] = statuses[fr.status];
+            friendsStatus[friendId] = fr.status;
         });
 
         const updatedUsers = users.map(user => ({
@@ -77,7 +71,7 @@ export async function searchUsers(req, res) {
             status: friendsStatus[user._id] || ''
         }));
 
-        console.log(updatedUsers)
+        // console.log(updatedUsers)
         res.json(updatedUsers);
     }
     catch (err) {
@@ -93,6 +87,32 @@ export async function getUserByUsername(req, res) {
         if (!user)
             return res.status(404).json({ message: "User not found" });
         res.json(user);
+    }
+    catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+}
+
+export async function getFriends(req, res) {
+    try {
+        const friends = await Friends.find({
+            $or: [
+                { from: req.user.id },
+                { to: req.user.id }
+            ],
+            status: 'accepted'
+        }).populate('from to', 'name username profilePicture');
+
+        const onlyFriends = friends.map((fr) =>({
+            _id: fr.from._id.equals(req.user.id) ? fr.to._id : fr.from._id,
+            name: fr.from._id.equals(req.user.id) ? fr.to.name : fr.from.name,
+            username: fr.from._id.equals(req.user.id) ? fr.to.username : fr.from.username,
+            profilePicture: fr.from._id.equals(req.user.id) ? fr.to.profilePicture : fr.from.profilePicture,
+            status: fr.status,
+            requestId: fr._id
+        }))
+
+        res.json(onlyFriends);
     }
     catch (err) {
         res.status(500).json({ message: err.message });

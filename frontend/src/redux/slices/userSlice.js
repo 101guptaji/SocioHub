@@ -23,11 +23,23 @@ export const getUserByUsername = createAsyncThunk('user/getUserByUsername',
     }
 );
 
+export const fetchFriends = createAsyncThunk('user/fetchFriends',
+    async (_, { rejectWithValue }) => {
+        try {
+            const res = await API.get('/users/friends');
+            return res.data;
+        } catch (error) {
+            return rejectWithValue(error.response?.data || { message: 'Fetching friends failed' });
+        }
+    }
+);
+
 const userSlice = createSlice({
     name: 'user',
     initialState: {
         user: null,
         users: [],
+        friends: [],
         loading: false,
         error: null
     },
@@ -55,6 +67,18 @@ const userSlice = createSlice({
                 state.user = action.payload;
             })
             .addCase(getUserByUsername.rejected, (state, action) => {
+                state.loading = false;
+                state.error = action.payload?.message || 'Error';
+            })
+            .addCase(fetchFriends.pending, (state) => {
+                state.loading = true;
+                state.error = null;
+            })
+            .addCase(fetchFriends.fulfilled, (state, action) => {
+                state.loading = false;
+                state.friends = action.payload;
+            })
+            .addCase(fetchFriends.rejected, (state, action) => {
                 state.loading = false;
                 state.error = action.payload?.message || 'Error';
             });

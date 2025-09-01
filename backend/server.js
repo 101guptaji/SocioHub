@@ -10,7 +10,6 @@ import authRoutes from './modules/auth/routes.js';
 import userRoutes from './modules/users/routes.js';
 import friendRoutes from './modules/friends/routes.js';
 import postRoutes from './modules/posts/routes.js';
-import mediaRoutes from './modules/media/routes.js';
 
 import {errorHandler} from './middleware/error.js';
 
