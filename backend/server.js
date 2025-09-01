@@ -10,6 +10,7 @@ import authRoutes from './modules/auth/routes.js';
 import userRoutes from './modules/users/routes.js';
 import friendRoutes from './modules/friends/routes.js';
 import postRoutes from './modules/posts/routes.js';
+import messageRouter from './modules/messages/routes.js';
 
 import {errorHandler} from './middleware/error.js';
 
@@ -27,6 +28,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);
 app.use('/api/friends', friendRoutes);
 app.use('/api/posts', postRoutes);
+app.use('/api/messages', messageRouter);
 
 app.get('/', (req, res)=>res.send("Welcome to Social Media Platform"));
 
