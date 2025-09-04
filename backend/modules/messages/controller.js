@@ -1,3 +1,5 @@
+import mongoose from "mongoose";
+
 import Message from "./model.js";
 import User from "../users/model.js";
 
@@ -17,6 +19,12 @@ export const sendMessage = async (req, res, next) => {
       content
     });
     await message.save();
+
+    // // Populate sender and receiver fields
+    // const populatedMessage = await message.populate("sender", "username").populate("receiver", "username");
+
+    // // Emit the message via WebSocket (if using Socket.IO)
+    // req.io.to(receiverId).emit('receiveMessage', populatedMessage);
 
     res.status(201).json(message);
   } catch (err) {
@@ -50,34 +58,64 @@ export const getConversation = async (req, res, next) => {
 export const getInbox = async (req, res, next) => {
   try {
     const myId = req.user.id;
-    
+
     const messages = await Message.aggregate([
       {
         $match: {
-          $or: [{ sender: myId }, { receiver: myId }]
+          $or: [
+            { sender: new mongoose.Types.ObjectId(myId) },
+            { receiver: new mongoose.Types.ObjectId(myId) }
+          ]
         }
       },
       {
-        $sort: { createdAt: -1 }
-      },
-      {
-        $group: {
-          _id: {
+        $addFields: {
+          otherUser: {
             $cond: [
-              { $eq: ["$sender", myId] },
+              { $eq: ["$sender", new mongoose.Types.ObjectId(myId)] },
               "$receiver",
               "$sender"
             ]
-          },
+          }
+        }
+      },
+      { $sort: { createdAt: -1 } }, // sort newest first
+      {
+        $group: {
+          _id: "$otherUser",
           lastMessage: { $first: "$$ROOT" }
+        }
+      },
+      {
+        $lookup: {
+          from: "users",
+          localField: "_id",
+          foreignField: "_id",
+          as: "otherUser"
+        }
+      },
+      { $unwind: "$otherUser" },
+      {
+        $project: {
+          _id: "$lastMessage._id",
+          content: "$lastMessage.content",
+          sender: "$lastMessage.sender",
+          receiver: "$lastMessage.receiver",
+          createdAt: "$lastMessage.createdAt",
+          otherUser: {
+            _id: "$otherUser._id",
+            username: "$otherUser.username",
+            name: "$otherUser.name",
+            profilePicture: "$otherUser.profilePicture"
+          }
         }
       }
     ]);
 
-    console.log("Messages:", messages);
+    // console.log("Messages:", messages);
 
     res.json(messages);
   } catch (err) {
-   next(err); // 500
+    next(err); // 500
   }
 };

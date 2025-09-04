@@ -1,40 +1,32 @@
-import express from "express";
-import dotenv from "dotenv";
-import cors from "cors";
-import helmet from 'helmet';
-import cookieParser from "cookie-parser";
-
-
+import http from 'http';
+import app from './app.js';
 import { connectDB } from "./db/config.js";
-import authRoutes from './modules/auth/routes.js';
-import userRoutes from './modules/users/routes.js';
-import friendRoutes from './modules/friends/routes.js';
-import postRoutes from './modules/posts/routes.js';
-import messageRouter from './modules/messages/routes.js';
+import {Server as SocketIOServer} from 'socket.io';
 
-import {errorHandler} from './middleware/error.js';
+// Create HTTP server
+const server = http.createServer(app);
 
-dotenv.config();
-const app = express();
+const io = new SocketIOServer(server, {
+    cors: {
+        origin: "*"
+    }
+});
 
-app.use(helmet());
-app.use(cors());
-app.use(express.json());
-app.use(cookieParser());
+io.on('connection', (socket)=>{
+    console.log('New client connected: ', socket.id);
 
-await connectDB();
+    const userId = socket.handshake.query.userId;
+    console.log("User connected: ", userId);
 
-app.use("/api/auth", authRoutes);
-app.use("/api/users", userRoutes);
-app.use('/api/friends', friendRoutes);
-app.use('/api/posts', postRoutes);
-app.use('/api/messages', messageRouter);
+    socket.join(userId); // Join a room identified by userId
 
-app.get('/', (req, res)=>res.send("Welcome to Social Media Platform"));
+    socket.on('disconnect', ()=>{
+        console.log('Client disconnected: ', socket.id);
+    });
+})
 
-// Global error shield
-app.use(errorHandler);
+const PORT = process.env.PORT || 8000;
 
-const PORT = process.env.PORT || 8080;
-
-app.listen(PORT, ()=>console.log("Server is running on PORT: "+PORT));
+connectDB().then(() => {
+    server.listen(PORT, () => console.log(`API running at http://localhost:${PORT}`));
+});

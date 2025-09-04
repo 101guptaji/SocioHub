@@ -9,6 +9,7 @@ import Navbar from './components/Navbar';
 import Messages from './pages/Messages';
 import UsersList from './pages/UsersList';
 import './app.css'
+import Conversation from './pages/Conversation';
 
 const PrivateRoute = ({ children }) => {
   const isAuth = localStorage.getItem("token");
@@ -19,9 +20,9 @@ function App() {
 
   return (
     <Router>
-      <Toaster position='top-right'/>
+      <Toaster position='top-right' />
       <header>
-      <Navbar />
+        <Navbar />
       </header>
       <main>
         <Routes>
@@ -32,6 +33,7 @@ function App() {
           <Route path="/profile" element={<PrivateRoute><Profile /></PrivateRoute>} />
           <Route path="/edit-profile" element={<PrivateRoute><EditProfileModal /></PrivateRoute>} />
           <Route path="/messages" element={<PrivateRoute><Messages /></PrivateRoute>} />
+          <Route path="/messages/:friendId" element={<PrivateRoute><Conversation /></PrivateRoute>} />
           <Route path="/users" element={<PrivateRoute><UsersList /></PrivateRoute>} />
         </Routes>
       </main>

@@ -23,6 +23,17 @@ export const fetchConversation = createAsyncThunk('messages/fetchConversation',
   }
 );
 
+export const fetchMessages = createAsyncThunk('messages/fetchMessages',
+  async (_, { rejectWithValue }) => {
+    try {
+      const response = await API.get('/messages');
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response.data);
+    }
+  }
+);
+
 const messagesSlice = createSlice({
   name: 'messages',
   initialState: {
@@ -39,6 +50,18 @@ const messagesSlice = createSlice({
       })
       .addCase(fetchConversation.fulfilled, (state, action) => {
         state.conversation = action.payload;
+      })
+      .addCase(fetchMessages.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(fetchMessages.fulfilled, (state, action) => {
+        state.inbox = action.payload;
+        state.loading = false;
+      })
+      .addCase(fetchMessages.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload ? action.payload.msg : action.error.message;
       });
   }
 });
