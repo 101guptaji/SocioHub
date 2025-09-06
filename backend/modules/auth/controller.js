@@ -2,9 +2,9 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import User from "../users/model.js";
 
-export const register = async (req, res) => {
+export const register = async (req, res, next) => {
     try {
-        const { name, email, password, username} = req.body;
+        const { name, email, password, username } = req.body;
         if (!email || !password || !name || !username)
             return res.status(400).json({ message: "Missing required fields" });
 
@@ -36,11 +36,11 @@ export const register = async (req, res) => {
     }
     catch (err) {
         console.log(err)
-        return res.status(500).json({ message: "Server error", error: err.message });
+        next(err);
     }
 };
 
-export const login = async (req, res) => {
+export const login = async (req, res, next) => {
     try {
         const { email, password } = req.body;
 
@@ -48,11 +48,11 @@ export const login = async (req, res) => {
             return res.status(400).json({ message: "Email and password required" });
 
         const user = await User.findOne({ email });
-        if (!user) 
+        if (!user)
             return res.status(401).json({ message: "User does not exist" });
 
         const match = await bcrypt.compare(password, user.password);
-        if (!match) 
+        if (!match)
             return res.status(401).json({ message: "Invalid credentials" });
 
         const token = jwt.sign({ id: user._id, username: user.username, email: user.email }, process.env.JWT_SECRET, { expiresIn: "7d" });
@@ -61,6 +61,6 @@ export const login = async (req, res) => {
     }
     catch (err) {
         console.log(err)
-        return res.status(500).json({ message: "Server error", error: err.message });
+        next(err);
     }
 };

@@ -18,23 +18,6 @@ export async function createPost(req, res, next) {
 
 export async function getFeed(req, res, next) {
     try {
-        // const limit = Number(req.query.limit) || 20;
-        // const cursor = req.query.cursor ? new Date(req.query.cursor) : null;
-
-        // const me = await User.findById(req.user.id).select('friends');
-        // const friendIds = (me.friends || []).map(id => id.toString());
-        // const match = {
-        //     author: { $in: [...friendIds, req.user._id] }
-        // };
-
-        // if (cursor) match.createdAt = { $lt: cursor };
-
-        // const rows = await Post.find(match).sort({ createdAt: -1 }).limit(limit + 1).populate('author', 'username name profilePicture');
-        // console.log("Posts:", rows);
-        // const nextCursor = rows.length > limit ? rows[limit - 1].createdAt.toISOString() : null;
-
-        // res.json({ posts: rows.slice(0, limit), nextCursor });
-
         const user = await User.findById(req.user.id).populate("friends", "_id");
 
         const friendIds = (user.friends || []).map((f) => f._id);

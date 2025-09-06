@@ -1,7 +1,7 @@
 import User from "./model.js";
 import Friends from '../friends/model.js';
 
-export async function getMyProfile(req, res) {
+export async function getMyProfile(req, res, next) {
     try {
         const user = await User.findById(req.user.id)
             .select('-password');
@@ -10,11 +10,11 @@ export async function getMyProfile(req, res) {
         res.json(user);
     }
     catch (err) {
-        res.status(500).json({ message: err.message });
+        next(err); // 500
     }
 }
 
-export async function updateProfile(req, res) {
+export async function updateProfile(req, res, next) {
     try {
         const { name, bio, profilePicture } = req.body;
         console.log(name, bio, profilePicture);
@@ -31,11 +31,11 @@ export async function updateProfile(req, res) {
         res.json(user);
     }
     catch (err) {
-        res.status(500).json({ message: err.message });
+        next(err); // 500
     }
 }
 
-export async function searchUsers(req, res) {
+export async function searchUsers(req, res, next) {
     // console.log("Searching for:", req.query);
     try {
         
@@ -75,11 +75,11 @@ export async function searchUsers(req, res) {
         res.json(updatedUsers);
     }
     catch (err) {
-        res.status(500).json({ message: err.message });
+        next(err); // 500
     }
 }
 
-export async function getUserByUsername(req, res) {
+export async function getUserByUsername(req, res, next) {
     try {
         const user = await User.findOne({ username: req.params.username })
             .select('-password');
@@ -89,11 +89,11 @@ export async function getUserByUsername(req, res) {
         res.json(user);
     }
     catch (err) {
-        res.status(500).json({ message: err.message });
+        next(err); // 500
     }
 }
 
-export async function getFriends(req, res) {
+export async function getFriends(req, res, next) {
     try {
         const friends = await Friends.find({
             $or: [
@@ -115,6 +115,6 @@ export async function getFriends(req, res) {
         res.json(onlyFriends);
     }
     catch (err) {
-        res.status(500).json({ message: err.message });
+        next(err); // 500
     }
 }

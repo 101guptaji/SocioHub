@@ -20,12 +20,6 @@ export const sendMessage = async (req, res, next) => {
     });
     await message.save();
 
-    // // Populate sender and receiver fields
-    // const populatedMessage = await message.populate("sender", "username").populate("receiver", "username");
-
-    // // Emit the message via WebSocket (if using Socket.IO)
-    // req.io.to(receiverId).emit('receiveMessage', populatedMessage);
-
     res.status(201).json(message);
   } catch (err) {
     next(err); // 500 error handled by global error handler
